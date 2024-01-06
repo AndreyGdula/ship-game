@@ -87,19 +87,19 @@ class Tool:
 class ProgressBar(pygame.sprite.Sprite):
     def __init__(self, progress):
         pygame.sprite.Sprite.__init__(self)
-        self.progress_width = 300
-        self.progress_height = 30
+        self.progress_width = 325
+        self.progress_height = 35
         self.image = pygame.Surface((self.progress_width, self.progress_height))
-        self.image.fill("gray")  # Define a cor de fundo da barra de progresso
+        self.image.fill("#022431")  # Define a cor de fundo da barra de progresso
         self.rect = self.image.get_rect()
-        self.rect.x = 700
+        self.rect.x = screen_width * 2 / 3
         self.rect.y = 10
         self.color_fg = "blue"  # Define a cor da barra de progresso (cor do progresso)
         self.progress = progress  # Define o progresso atual da barra de progresso (0-100%)
 
     def update_progress(self, progress):
         self.progress = progress  # Atualiza o progresso
-        self.image.fill("gray")  # Preenche a imagem com a cor de fundo
+        self.image.fill("#022431")  # Preenche a imagem com a cor de fundo
         pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
         
 
@@ -119,11 +119,34 @@ dt = 0
     # Files config
 # Background preset
 background = pygame.image.load("imgs/bg_space.png")
-background = pygame.transform.scale(background, (1920, 1280))
+background = pygame.transform.scale(background, (screen_width * 2, screen_height * 2))
 
 bg_rect = background.get_rect()
 bg_rect.center = (screen_width / 2, screen_height / 2)
 bg_speed = 100
+
+# Hud
+hud = pygame.image.load("imgs/hud_1.png")
+hud = pygame.transform.scale(hud, (270, 120))
+
+hud_rect = hud.get_rect()
+hud_rect.x = 0
+hud_rect.y = 0
+
+hud2 = pygame.image.load("imgs/hud_2.png")
+hud2 = pygame.transform.scale(hud2, (600, 140))
+
+hud2_rect = hud2.get_rect()
+hud2_rect.x = screen_width - hud2_rect.width
+hud2_rect.y = 0
+
+# Toll
+tool_cont = pygame.image.load("imgs/tool.png")
+tool_cont = pygame.transform.scale(tool_cont, (70, 70))
+
+tool_cont_rect = tool_cont.get_rect()
+tool_cont_rect.x = 15
+tool_cont_rect.y = 15
 
 # Ship preset
 rkt_width = 30
@@ -171,9 +194,14 @@ while run:
     current_time = pygame.time.get_ticks()
     improve_time = int(current_time) - int(start_time)
 
-    root.fill('#333637')
+    root.fill('#090619')
     root.blit(background, bg_rect)
-    root.blit(rocket, rkt_rect)
+
+    hud2_rect.x = screen_width - hud2_rect.width
+    root.blit(hud, hud_rect)
+    root.blit(hud2, hud2_rect)
+
+    root.blit(tool_cont, tool_cont_rect)
 
     all_sprites.update()
     all_sprites.draw(root)
@@ -184,12 +212,12 @@ while run:
             run = False
 
     # Text
-    time_text = font.render(f"{current_time}", True, (255, 255, 255))
-    time_rect = time_text.get_rect(topright = (screen_width - 30, 15))
+    time_text = font.render(f"{current_time / 1000:.2f}s", True, (0, 0, 255))
+    time_rect = time_text.get_rect(topright = (screen_width - 25, 35))
     root.blit(time_text, time_rect)
 
-    score_text = font.render(f'Score: {score}', True, (255, 255, 255))
-    score_rect = score_text.get_rect(topleft = (15, 15))
+    score_text = font.render(f'{score}', True, (0, 0, 255))
+    score_rect = score_text.get_rect(topleft = (95, 25))
     root.blit(score_text, score_rect)
 
     speed_text = font.render(f'Speed: {times_improved}', True, (255, 255, 255))
@@ -214,6 +242,7 @@ while run:
         run = False
 
     # Ship Collision
+    root.blit(rocket, rkt_rect)
     if rkt_rect.x < 0:
         rkt_rect.x = 0
         bg_speed = 0
