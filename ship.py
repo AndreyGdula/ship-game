@@ -2,7 +2,7 @@ import pygame, random
 from tkinter import messagebox
 
 
-# Asteroid preset
+# Asteroid config
 class Asteroid:
     def __init__(self):
         self.ast_width = 50
@@ -23,7 +23,7 @@ class Asteroid:
     def draw(self):
         root.blit(self.asteroid, self.ast_rect)
 
-    def update(self):
+    def update(self, improve_time):
         self.ast_rect.x += self.ast_speed_x
         self.ast_rect.y += self.ast_speed_y
   
@@ -32,6 +32,16 @@ class Asteroid:
 
         if self.ast_rect.top < 0 or self.ast_rect.bottom > screen_height:
             self.ast_speed_y *= -1
+
+        if improve_time > improve_clock:
+            if self.ast_speed_x > 0:
+                self.ast_speed_x += 1
+            else:
+                self.ast_speed_x -= 1
+            if self.ast_speed_y > 0:
+                self.ast_speed_y += 1
+            else:
+                self.ast_speed_y -= 1
     
     def collision(self):
         ast_mask = pygame.mask.from_surface(self.asteroid)
@@ -43,6 +53,55 @@ class Asteroid:
         if collision:
             return True
 
+
+# Tool config
+class Tool:
+    def __init__(self):
+        self.tool_width = 512 / 10
+        self.tool_height = 512 / 10
+
+        self.tool_img = pygame.image.load("imgs/tool.png")
+        self.tool_img = pygame.transform.scale(self.tool_img, (self.tool_width, self.tool_height))
+        
+        self.tool_rect = self.tool_img.get_rect()
+        self.tool_rect.x = random.randint(30, screen_width - 30)
+        self.tool_rect.y = random.randint(30, screen_height - 30)
+
+    def draw(self):
+        root.blit(self.tool_img, self.tool_rect)
+
+    def collision(self):
+        tool_mask = pygame.mask.from_surface(self.tool_img)
+
+        tool_x = int(self.tool_rect.x - rkt_rect.x)
+        tool_y = int(self.tool_rect.y - rkt_rect.y)
+
+        collision = rkt_mask.overlap(tool_mask, (tool_x, tool_y))
+        if collision:
+            self.tool_rect.x = random.randint(30, screen_width - 30)
+            self.tool_rect.y = random.randint(30, screen_height - 30)
+            return True
+
+
+# ProgressBar config
+class ProgressBar(pygame.sprite.Sprite):
+    def __init__(self, progress):
+        pygame.sprite.Sprite.__init__(self)
+        self.progress_width = 300
+        self.progress_height = 30
+        self.image = pygame.Surface((self.progress_width, self.progress_height))
+        self.image.fill("gray")  # Define a cor de fundo da barra de progresso
+        self.rect = self.image.get_rect()
+        self.rect.x = 700
+        self.rect.y = 10
+        self.color_fg = "blue"  # Define a cor da barra de progresso (cor do progresso)
+        self.progress = progress  # Define o progresso atual da barra de progresso (0-100%)
+
+    def update_progress(self, progress):
+        self.progress = progress  # Atualiza o progresso
+        self.image.fill("gray")  # Preenche a imagem com a cor de fundo
+        pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
+        
 
 pygame.init()
 
@@ -85,28 +144,57 @@ asteroid_2 = Asteroid()
 asteroid_3 = Asteroid()
 asteroid_4 = Asteroid()
 update_time = 5000
+improve_clock = 10000
+times_improved = 0
+
+# Tool preset
+tool = Tool()
+score = 0
 
 # Font preset
 font = pygame.font.SysFont('Arial', 50)
+
+# General preset
+start_time = pygame.time.get_ticks()
+
+# ProgressBar preset
+progress_bar = ProgressBar(100)
+all_sprites = pygame.sprite.Group()
+all_sprites.add(progress_bar)
+progress_cont = 100
+progress_clock = pygame.time.get_ticks()
 
 # Loop
 run = True
 while run:
     screen_width, screen_height = pygame.display.get_surface().get_size()
     current_time = pygame.time.get_ticks()
+    improve_time = int(current_time) - int(start_time)
 
     root.fill('#333637')
     root.blit(background, bg_rect)
     root.blit(rocket, rkt_rect)
+
+    all_sprites.update()
+    all_sprites.draw(root)
 
     # Exit Game
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
 
-    text_time = font.render(f"{current_time}", True, (255, 255, 255))
-    time_rect = text_time.get_rect(topright = (screen_width - 30, 15))
-    root.blit(text_time, time_rect)
+    # Text
+    time_text = font.render(f"{current_time}", True, (255, 255, 255))
+    time_rect = time_text.get_rect(topright = (screen_width - 30, 15))
+    root.blit(time_text, time_rect)
+
+    score_text = font.render(f'Score: {score}', True, (255, 255, 255))
+    score_rect = score_text.get_rect(topleft = (15, 15))
+    root.blit(score_text, score_rect)
+
+    speed_text = font.render(f'Speed: {times_improved}', True, (255, 255, 255))
+    speed_rect = speed_text.get_rect(center = (screen_width / 2, 35))
+    root.blit(speed_text, speed_rect)
 
     # Key mapping
     key = pygame.key.get_pressed()
@@ -148,19 +236,43 @@ while run:
 
     # Asteroid Moviment
     asteroid_1.draw()
-    asteroid_1.update()
+    asteroid_1.update(improve_time)
 
     if current_time > update_time:
         asteroid_2.draw()
-        asteroid_2.update()
+        asteroid_2.update(improve_time)
 
     if current_time > update_time * 2:
         asteroid_3.draw()
-        asteroid_3.update()
+        asteroid_3.update(improve_time)
 
     if current_time > update_time * 3:
         asteroid_4.draw()
-        asteroid_4.update()
+        asteroid_4.update(improve_time)
+
+    if improve_time > improve_clock:
+        start_time = pygame.time.get_ticks()
+        times_improved += 1
+
+    # Tool
+    tool.draw()
+    if tool.collision():
+        score += 1
+        if progress_cont < 90:
+            progress_cont += 10
+            progress_bar.update_progress(progress_cont)
+        else:
+            progress_cont = 100
+            progress_bar.update_progress(progress_cont)
+
+    # ProgressBar
+    if progress_cont == 0:
+        messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
+
+    if current_time - progress_clock > 500:
+        progress_cont -= 1
+        progress_bar.update_progress(progress_cont)
+        progress_clock = pygame.time.get_ticks()
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
