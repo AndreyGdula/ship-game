@@ -33,16 +33,19 @@ class Asteroid:
         if self.ast_rect.top < 0 or self.ast_rect.bottom > screen_height:
             self.ast_speed_y *= -1
 
-        if improve_time > improve_clock:
-            if self.ast_speed_x > 0:
-                self.ast_speed_x += 1
-            else:
-                self.ast_speed_x -= 1
-            if self.ast_speed_y > 0:
-                self.ast_speed_y += 1
-            else:
-                self.ast_speed_y -= 1
-    
+        if 0 < self.ast_speed_x < 15 or -15 < self.ast_speed_x < 0:
+            if improve_time > improve_clock:
+                if self.ast_speed_x > 0:
+                    self.ast_speed_x += 1
+                else:
+                    self.ast_speed_x -= 1
+        if 0 < self.ast_speed_y < 15 or -15 < self.ast_speed_y < 0:
+            if improve_time > improve_clock:
+                if self.ast_speed_y > 0:
+                    self.ast_speed_y += 1
+                else:
+                    self.ast_speed_y -= 1
+
     def collision(self):
         ast_mask = pygame.mask.from_surface(self.asteroid)
 
@@ -65,12 +68,13 @@ class Tool:
         
         self.tool_rect = self.tool_img.get_rect()
         self.tool_rect.x = random.randint(30, screen_width - 30)
-        self.tool_rect.y = random.randint(30, screen_height - 30)
+        self.tool_rect.y = random.randint(30, screen_height - 50)
 
     def draw(self):
         root.blit(self.tool_img, self.tool_rect)
 
-    def collision(self):
+
+    def collision(self, hud_rect, hud2_rect):
         tool_mask = pygame.mask.from_surface(self.tool_img)
 
         tool_x = int(self.tool_rect.x - rkt_rect.x)
@@ -79,8 +83,12 @@ class Tool:
         collision = rkt_mask.overlap(tool_mask, (tool_x, tool_y))
         if collision:
             self.tool_rect.x = random.randint(30, screen_width - 30)
-            self.tool_rect.y = random.randint(30, screen_height - 30)
+            self.tool_rect.y = random.randint(30, screen_height - 50)
             return True
+        
+        if self.tool_rect.colliderect(hud_rect) or self.tool_rect.colliderect(hud2_rect):
+            self.tool_rect.x = random.randint(30, screen_width - 30)
+            self.tool_rect.y = random.randint(30, screen_height - 50)
 
 
 # ProgressBar config
@@ -90,20 +98,21 @@ class ProgressBar(pygame.sprite.Sprite):
         self.progress_width = 325
         self.progress_height = 35
         self.image = pygame.Surface((self.progress_width, self.progress_height))
-        self.image.fill("#022431")  # Define a cor de fundo da barra de progresso
+        self.image.fill('#022431')  # Define a cor de fundo da barra de progresso
         self.rect = self.image.get_rect()
         self.rect.x = screen_width * 2 / 3
         self.rect.y = 10
-        self.color_fg = "blue"  # Define a cor da barra de progresso (cor do progresso)
+        self.color_fg = 'blue'  # Define a cor da barra de progresso (cor do progresso)
         self.progress = progress  # Define o progresso atual da barra de progresso (0-100%)
 
     def update_progress(self, progress):
         self.progress = progress  # Atualiza o progresso
-        self.image.fill("#022431")  # Preenche a imagem com a cor de fundo
+        self.image.fill('#022431')  # Preenche a imagem com a cor de fundo
         pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
         
 
 pygame.init()
+pygame.mixer.init()
 
 # Screen config
 screen_width = pygame.display.Info().current_w - 100
@@ -140,13 +149,19 @@ hud2_rect = hud2.get_rect()
 hud2_rect.x = screen_width - hud2_rect.width
 hud2_rect.y = 0
 
-# Toll
+# Tool
 tool_cont = pygame.image.load("imgs/tool.png")
 tool_cont = pygame.transform.scale(tool_cont, (70, 70))
 
 tool_cont_rect = tool_cont.get_rect()
 tool_cont_rect.x = 15
 tool_cont_rect.y = 15
+
+# Sound
+hit_effect = pygame.mixer.Sound("sound/hit-effect.wav")
+powerup_effect = pygame.mixer.Sound("sound/power-up.wav")
+score_effect = pygame.mixer.Sound("sound/score.wav")
+space_music = pygame.mixer.Sound("sound/space-bass.ogg")
 
 # Ship preset
 rkt_width = 30
@@ -186,6 +201,7 @@ all_sprites = pygame.sprite.Group()
 all_sprites.add(progress_bar)
 progress_cont = 100
 progress_clock = pygame.time.get_ticks()
+progress_max_clock = 0
 
 # Loop
 run = True
@@ -220,7 +236,7 @@ while run:
     score_rect = score_text.get_rect(topleft = (95, 25))
     root.blit(score_text, score_rect)
 
-    speed_text = font.render(f'Speed: {times_improved}', True, (255, 255, 255))
+    speed_text = font.render(f'Speed: {asteroid_1.ast_speed_x}', True, (255, 255, 255))
     speed_rect = speed_text.get_rect(center = (screen_width / 2, 35))
     root.blit(speed_text, speed_rect)
 
@@ -241,7 +257,7 @@ while run:
     if key[pygame.K_ESCAPE]:
         run = False
 
-    # Ship Collision
+    # Ship config
     root.blit(rocket, rkt_rect)
     if rkt_rect.x < 0:
         rkt_rect.x = 0
@@ -258,8 +274,14 @@ while run:
     else:
         bg_speed = 100
 
+    if progress_max_clock > 60000:
+        rkt_speed = 400
+    if progress_max_clock > 120000:
+        rkt_speed = 600
+
     # Ship-Asteroid Collision
     if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision():
+        hit_effect.play()
         messagebox.showwarning("DERROTA", "você bateu no asteroid!")
         rkt_rect.center = screen_width / 2, screen_height / 2
 
@@ -267,17 +289,14 @@ while run:
     asteroid_1.draw()
     asteroid_1.update(improve_time)
 
-    if current_time > update_time:
-        asteroid_2.draw()
-        asteroid_2.update(improve_time)
+    asteroid_2.draw()
+    asteroid_2.update(improve_time)
 
-    if current_time > update_time * 2:
-        asteroid_3.draw()
-        asteroid_3.update(improve_time)
+    asteroid_3.draw()
+    asteroid_3.update(improve_time)
 
-    if current_time > update_time * 3:
-        asteroid_4.draw()
-        asteroid_4.update(improve_time)
+    asteroid_4.draw()
+    asteroid_4.update(improve_time)
 
     if improve_time > improve_clock:
         start_time = pygame.time.get_ticks()
@@ -285,14 +304,16 @@ while run:
 
     # Tool
     tool.draw()
-    if tool.collision():
+    if tool.collision(hud_rect, hud2_rect):
         score += 1
+        score_effect.play()
         if progress_cont < 90:
             progress_cont += 10
             progress_bar.update_progress(progress_cont)
         else:
             progress_cont = 100
             progress_bar.update_progress(progress_cont)
+            progress_max_clock = pygame.time.get_ticks()
 
     # ProgressBar
     if progress_cont == 0:
