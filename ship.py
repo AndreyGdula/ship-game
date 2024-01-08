@@ -274,7 +274,10 @@ while run:
     else:
         bg_speed = 100
 
+        # Speed up
     if progress_max_clock > 60000:
+        rocket = pygame.image.load("imgs/rocket-blue.png")
+        rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
         rkt_speed = 400
     if progress_max_clock > 120000:
         rkt_speed = 600
