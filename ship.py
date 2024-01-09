@@ -109,8 +109,80 @@ class ProgressBar(pygame.sprite.Sprite):
         self.progress = progress  # Atualiza o progresso
         self.image.fill('#022431')  # Preenche a imagem com a cor de fundo
         pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
-        
 
+
+class Bubble(pygame.sprite.Sprite):
+    def __init__(self, rkt_rect):
+        pygame.sprite.Sprite.__init__(self)
+        self.bubble_sprite = []
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_1.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_2.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_3.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_4.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_5.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_6.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_7.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_8.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_9.png'))
+        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_10.png'))
+
+        self.sprite_current = 0
+        self.image = self.bubble_sprite[self.sprite_current]
+        self.rect = self.image.get_rect()
+        self.rect.center = rkt_rect.center
+
+    def update(self, anime_bubble, rkt_rect):
+        if anime_bubble:
+            self.sprite_current += 0.5
+            if self.sprite_current >= len(self.bubble_sprite):
+                self.sprite_current = 0
+                anime_bubble = False
+            self.image = self.bubble_sprite[int(self.sprite_current)]
+            self.image = pygame.transform.scale2x(self.image)
+            self.rect.center = rkt_rect.center
+
+
+class BlueRing(pygame.sprite.Sprite):
+    def __init__(self, rkt_rect):
+        pygame.sprite.Sprite.__init__(self)
+        self.ring_sprite = []
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion1.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion2.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion3.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion4.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion5.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion6.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion7.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion8.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion9.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion10.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion11.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion12.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion13.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion14.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion15.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion16.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion17.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion18.png'))
+        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion19.png'))
+
+        self.ring_current = 0
+        self.image = self.ring_sprite[self.ring_current]
+        self.rect = self.image.get_rect()
+        self.rect.center = rkt_rect.center
+
+    def update(self, anime_ring, rkt_rect):
+        if anime_ring:
+            self.ring_current += 0.5
+            if self.ring_current >= len(self.ring_sprite):
+                self.ring_current = 0
+                anime_ring = False
+            self.image = self.ring_sprite[int(self.ring_current)]
+            self.image = pygame.transform.scale(self.image, (60, 60))
+            self.rect.center = rkt_rect.center
+            self.rect.x += 70
+            self.rect.y += 70
+        
 pygame.init()
 pygame.mixer.init()
 
@@ -181,6 +253,7 @@ asteroid_1 = Asteroid()
 asteroid_2 = Asteroid()
 asteroid_3 = Asteroid()
 asteroid_4 = Asteroid()
+asteroid_5 = Asteroid()
 update_time = 5000
 improve_clock = 10000
 times_improved = 0
@@ -202,6 +275,17 @@ all_sprites.add(progress_bar)
 progress_cont = 100
 progress_clock = pygame.time.get_ticks()
 progress_max_clock = 0
+
+# Sprites
+bubble = Bubble(rkt_rect)
+bubble_group = pygame.sprite.Group()
+bubble_group.add(bubble)
+anime_bubble = False
+
+blue_ring = BlueRing(rkt_rect)
+ring_group = pygame.sprite.Group()
+ring_group.add(blue_ring)
+anime_ring = False
 
 # Loop
 run = True
@@ -275,16 +359,31 @@ while run:
         bg_speed = 100
 
         # Speed up
-    if progress_max_clock > 60000:
+    if 65 * 1000 > progress_max_clock > 60 * 1000:
+        powerup_effect.play()
+        anime_ring = True
+        ring_group.draw(root)
+        ring_group.update(anime_ring, rkt_rect)
+    if progress_max_clock > 60 * 1000:
         rocket = pygame.image.load("imgs/rocket-blue.png")
         rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
         rkt_speed = 400
-    if progress_max_clock > 120000:
+    if 125 * 1000 > progress_max_clock > 120 * 1000:
+        powerup_effect.play()
+        anime_ring = True
+        ring_group.draw(root)
+        ring_group.update(anime_ring, rkt_rect)
+    if progress_max_clock > 120 * 1000:
+        rocket = pygame.image.load("imgs/rocket-blue.png")
+        rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
         rkt_speed = 600
 
     # Ship-Asteroid Collision
-    if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision():
+    if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or asteroid_5.collision():
         hit_effect.play()
+        anime_bubble = True
+        bubble_group.draw(root)
+        bubble_group.update(anime_bubble, rkt_rect)
         messagebox.showwarning("DERROTA", "você bateu no asteroid!")
         rkt_rect.center = screen_width / 2, screen_height / 2
 
@@ -300,6 +399,10 @@ while run:
 
     asteroid_4.draw()
     asteroid_4.update(improve_time)
+
+    if current_time > 120 * 1000:
+        asteroid_5.draw()
+        asteroid_5.update(improve_time)
 
     if improve_time > improve_clock:
         start_time = pygame.time.get_ticks()
@@ -320,6 +423,9 @@ while run:
 
     # ProgressBar
     if progress_cont == 0:
+        anime_bubble = True
+        bubble_group.draw(root)
+        bubble_group.update(anime_bubble, rkt_rect)
         messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
 
     if current_time - progress_clock > 500:
