@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, pygame_menu
 from tkinter import messagebox
 
 
@@ -182,6 +182,38 @@ class BlueRing(pygame.sprite.Sprite):
             self.rect.center = rkt_rect.center
             self.rect.x += 70
             self.rect.y += 70
+
+
+class Nitro:
+    def __init__(self):
+        self.nitro_width = 50
+        self.nitro_height = 55
+        self.padding_right = 10
+        self.padding_bottom = 10
+        self.nitro_img = pygame.image.load("imgs/bluefire.gif")
+        self.nitro_img = pygame.transform.scale(self.nitro_img, (self.nitro_width, self.nitro_height))
+
+        self.nitro_rect = self.nitro_img.get_rect()
+        self.nitro_rect.center = screen_width - (self.nitro_width / 2) - self.padding_right, (screen_height / 2) - self.nitro_height - self.padding_bottom
+
+        '''self.boom_dimension = 1
+        self.max_boom = 60
+        self.min_boom = 50'''
+
+    def draw(self):
+        root.blit(self.nitro_img, self.nitro_rect)
+
+    def update(self, screen_width, screen_height):
+        '''if self.nitro_width >= self.max_boom or self.nitro_width <= self.min_boom:
+            self.boom_dimension *= -1
+        
+        self.nitro_width += self.boom_dimension
+        self.nitro_height += self.boom_dimension'''
+
+        self.nitro_rect.center = screen_width - self.nitro_width - self.padding_right, screen_height - self.nitro_height - self.padding_bottom
+
+        self.nitro_img = pygame.transform.scale(self.nitro_img, (self.nitro_width, self.nitro_height))
+
         
 pygame.init()
 pygame.mixer.init()
@@ -286,6 +318,9 @@ blue_ring = BlueRing(rkt_rect)
 ring_group = pygame.sprite.Group()
 ring_group.add(blue_ring)
 anime_ring = False
+
+# Nitro
+nitro = Nitro()
 
 # Loop
 run = True
@@ -432,6 +467,11 @@ while run:
         progress_cont -= 1
         progress_bar.update_progress(progress_cont)
         progress_clock = pygame.time.get_ticks()
+
+    # Nitro
+    if score >= 5:
+        nitro.update(screen_width, screen_height)
+        nitro.draw()
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
