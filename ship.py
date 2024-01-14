@@ -213,6 +213,12 @@ def show_menu():
     menu.add.button('Sair', pygame_menu.events.EXIT)
     menu.mainloop(root)
 
+def show_gameover():
+    gameover = pygame_menu.Menu('GAME OVER', screen_width, screen_height, theme=pygame_menu.themes.THEME_DARK)
+    gameover.add.button('Reiniciar', menu_play)
+    gameover.add.button('Sair', pygame_menu.events.EXIT)
+    gameover.mainloop(root)
+
 # Loop
 def menu_play():
     global start_time, score, rocket, progress_max_clock, progress_cont, progress_cont, progress_clock, stage1, stage2, stage3, times_improved
@@ -316,8 +322,8 @@ def menu_play():
             anime_bubble = True
             bubble_group.draw(root)
             bubble_group.update(anime_bubble, rkt_rect)
-            messagebox.showwarning("DERROTA", "você bateu no asteroid!")
             rkt_rect.center = screen_width / 2, screen_height / 2
+            show_gameover()
 
         # Asteroid Moviment
         asteroid_1.draw()
