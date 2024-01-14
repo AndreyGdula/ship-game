@@ -4,10 +4,9 @@ from tkinter import messagebox
 pygame.init()
 pygame.mixer.init()
 
-# Screen config
+# Screen Config
 screen_width = pygame.display.Info().current_w - 100
 screen_height = pygame.display.Info().current_h - 100
-
 
 # Asteroid config
 class Asteroid:
@@ -19,6 +18,7 @@ class Asteroid:
 
         self.ast_rect = self.asteroid.get_rect()
         self.ast_mask = pygame.mask.from_surface(self.asteroid)
+
         self.ast_rect.x = random.randint(1, screen_width - 20)
         self.ast_rect.y = random.choice([20, screen_height - 35])
 
@@ -221,7 +221,113 @@ def show_gameover():
 
 # Loop
 def menu_play():
-    global start_time, score, rocket, progress_max_clock, progress_cont, progress_cont, progress_clock, stage1, stage2, stage3, times_improved
+    global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, bubble_group, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, times_improved, score, start_time, progress_cont, progress_clock, progress_max_clock, anime_bubble, anime_ring, start_time, screen_width, screen_height
+
+    # Ticks
+    clock = pygame.time.Clock()
+    dt = 0
+
+    # Screen Config
+    screen_width = pygame.display.Info().current_w - 100
+    screen_height = pygame.display.Info().current_h - 100
+
+        # Files config
+    # Background preset
+    background = pygame.image.load("imgs/bg_space.png")
+    background = pygame.transform.scale(background, (screen_width * 2, screen_height * 2))
+
+    bg_rect = background.get_rect()
+    bg_rect.center = (screen_width / 2, screen_height / 2)
+    bg_speed = 100
+
+    # Hud
+    hud = pygame.image.load("imgs/hud_1.png")
+    hud = pygame.transform.scale(hud, (270, 120))
+
+    hud_rect = hud.get_rect()
+    hud_rect.x = 0
+    hud_rect.y = 0
+
+    hud2 = pygame.image.load("imgs/hud_2.png")
+    hud2 = pygame.transform.scale(hud2, (600, 140))
+
+    hud2_rect = hud2.get_rect()
+    hud2_rect.x = screen_width - hud2_rect.width
+    hud2_rect.y = 0
+
+    # Tool
+    tool_cont = pygame.image.load("imgs/tool.png")
+    tool_cont = pygame.transform.scale(tool_cont, (70, 70))
+
+    tool_cont_rect = tool_cont.get_rect()
+    tool_cont_rect.x = 15
+    tool_cont_rect.y = 15
+
+    # Sound
+    hit_effect = pygame.mixer.Sound("sound/hit-effect.wav")
+    powerup_effect = pygame.mixer.Sound("sound/power-up.wav")
+    score_effect = pygame.mixer.Sound("sound/score.wav")
+    space_music = pygame.mixer.Sound("sound/space-bass.ogg")
+
+    # Ship preset
+    rkt_width = 30
+    rkt_height = 60
+
+    rocket = pygame.image.load("imgs/rocket.png")
+    rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
+
+    rkt_rect = rocket.get_rect()
+    rkt_mask = pygame.mask.from_surface(rocket)
+    rkt_rect.x = screen_width / 2
+    rkt_rect.y = screen_height / 2
+    rkt_speed = 300
+
+    # Asteroid preset
+    asteroid_1 = Asteroid()
+    asteroid_2 = Asteroid()
+    asteroid_3 = Asteroid()
+    asteroid_4 = Asteroid()
+    asteroid_5 = Asteroid()
+
+    update_time = 5000
+    improve_clock = 10000
+    times_improved = 0
+
+    # Tool preset
+    tool = Tool()
+    score = 0
+
+    # Font preset
+    font = pygame.font.SysFont('Arial', 50)
+
+    # General preset
+    start_time = pygame.time.get_ticks()
+
+    # ProgressBar preset
+    progress_bar = ProgressBar(100)
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(progress_bar)
+    progress_cont = 100
+    progress_clock = pygame.time.get_ticks()
+    progress_max_clock = 0
+
+    # Sprites
+    bubble = Bubble(rkt_rect)
+    bubble_group = pygame.sprite.Group()
+    bubble_group.add(bubble)
+    anime_bubble = False
+
+    blue_ring = BlueRing(rkt_rect)
+    ring_group = pygame.sprite.Group()
+    ring_group.add(blue_ring)
+    anime_ring = False
+
+    # Nitro
+    nitro = Nitro(rkt_rect)
+    stage1 = True
+    stage2 = False
+    stage3 = False
+
     run = True
     while run:
         screen_width, screen_height = pygame.display.get_surface().get_size()
@@ -254,9 +360,21 @@ def menu_play():
         score_rect = score_text.get_rect(topleft = (95, 25))
         root.blit(score_text, score_rect)
 
-        speed_text = font.render(f'Speed: {asteroid_1.ast_speed_x}', True, (255, 255, 255))
-        speed_rect = speed_text.get_rect(center = (screen_width / 2, 35))
-        root.blit(speed_text, speed_rect)
+        speed_text_1 = font.render(f'1 => x: {asteroid_1.ast_speed_x} y: {asteroid_1.ast_speed_y}', True, (255, 255, 255))
+        speed_rect_1 = speed_text_1.get_rect(topleft = (15, 120))
+
+        speed_text_2 = font.render(f'2 => x: {asteroid_2.ast_speed_x} y: {asteroid_2.ast_speed_y}', True, (255, 255, 255))
+        speed_rect_2 = speed_text_2.get_rect(topleft = (15, 170))
+
+        speed_text_3 = font.render(f'3 => x: {asteroid_3.ast_speed_x} y: {asteroid_3.ast_speed_y}', True, (255, 255, 255))
+        speed_rect_3 = speed_text_3.get_rect(topleft = (15, 220))
+
+        speed_text_4 = font.render(f'4 => x: {asteroid_4.ast_speed_x} y: {asteroid_4.ast_speed_y}', True, (255, 255, 255))
+        speed_rect_4 = speed_text_4.get_rect(topleft = (15, 270))
+
+        if current_time > 125 * 1000:
+            speed_text_5 = font.render(f'5 => x: {asteroid_5.ast_speed_x} y: {asteroid_5.ast_speed_y}', True, (255, 255, 255))
+            speed_rect_5 = speed_text_5.get_rect(topleft = (15, 320))
 
         # Key mapping
         key = pygame.key.get_pressed()
@@ -274,6 +392,14 @@ def menu_play():
             rkt_rect.x += rkt_speed * dt
         if key[pygame.K_ESCAPE]:
             run = False
+
+        if key[pygame.K_TAB]:
+            root.blit(speed_text_1, speed_rect_1)
+            root.blit(speed_text_2, speed_rect_2)
+            root.blit(speed_text_3, speed_rect_3)
+            root.blit(speed_text_4, speed_rect_4)
+            if current_time > 125 * 1000:
+                root.blit(speed_text_5, speed_rect_5)
 
         # Ship config
         root.blit(rocket, rkt_rect)
@@ -317,7 +443,7 @@ def menu_play():
             rkt_speed = 600
 
         # Ship-Asteroid Collision
-        if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or asteroid_5.collision():
+        if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or  current_time > 125 * 1000 and asteroid_5.collision():
             hit_effect.play()
             anime_bubble = True
             bubble_group.draw(root)
@@ -366,6 +492,7 @@ def menu_play():
             bubble_group.update(anime_bubble, rkt_rect)
             messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
             rkt_rect.center = screen_width / 2, screen_height / 2
+            show_gameover()
 
         if current_time - progress_clock > 500:
             progress_cont -= 1
@@ -387,7 +514,7 @@ def menu_play():
         elif stage1:
             rkt_speed = 300
         elif stage2:
-            rkt_séed = 400
+            rkt_speed = 400
         elif stage3:
             rkt_speed = 600
 
@@ -399,106 +526,6 @@ def menu_play():
 
 root = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("SHIP GAME")
-
-# Ticks
-clock = pygame.time.Clock()
-dt = 0
-
-    # Files config
-# Background preset
-background = pygame.image.load("imgs/bg_space.png")
-background = pygame.transform.scale(background, (screen_width * 2, screen_height * 2))
-
-bg_rect = background.get_rect()
-bg_rect.center = (screen_width / 2, screen_height / 2)
-bg_speed = 100
-
-# Hud
-hud = pygame.image.load("imgs/hud_1.png")
-hud = pygame.transform.scale(hud, (270, 120))
-
-hud_rect = hud.get_rect()
-hud_rect.x = 0
-hud_rect.y = 0
-
-hud2 = pygame.image.load("imgs/hud_2.png")
-hud2 = pygame.transform.scale(hud2, (600, 140))
-
-hud2_rect = hud2.get_rect()
-hud2_rect.x = screen_width - hud2_rect.width
-hud2_rect.y = 0
-
-# Tool
-tool_cont = pygame.image.load("imgs/tool.png")
-tool_cont = pygame.transform.scale(tool_cont, (70, 70))
-
-tool_cont_rect = tool_cont.get_rect()
-tool_cont_rect.x = 15
-tool_cont_rect.y = 15
-
-# Sound
-hit_effect = pygame.mixer.Sound("sound/hit-effect.wav")
-powerup_effect = pygame.mixer.Sound("sound/power-up.wav")
-score_effect = pygame.mixer.Sound("sound/score.wav")
-space_music = pygame.mixer.Sound("sound/space-bass.ogg")
-
-# Ship preset
-rkt_width = 30
-rkt_height = 60
-
-rocket = pygame.image.load("imgs/rocket.png")
-rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
-
-rkt_rect = rocket.get_rect()
-rkt_mask = pygame.mask.from_surface(rocket)
-rkt_rect.x = screen_width / 2
-rkt_rect.y = screen_height / 2
-rkt_speed = 300
-
-# Asteroid preset
-asteroid_1 = Asteroid()
-asteroid_2 = Asteroid()
-asteroid_3 = Asteroid()
-asteroid_4 = Asteroid()
-asteroid_5 = Asteroid()
-update_time = 5000
-improve_clock = 10000
-times_improved = 0
-
-# Tool preset
-tool = Tool()
-score = 0
-
-# Font preset
-font = pygame.font.SysFont('Arial', 50)
-
-# General preset
-start_time = pygame.time.get_ticks()
-
-# ProgressBar preset
-progress_bar = ProgressBar(100)
-all_sprites = pygame.sprite.Group()
-all_sprites.add(progress_bar)
-progress_cont = 100
-progress_clock = pygame.time.get_ticks()
-progress_max_clock = 0
-
-# Sprites
-bubble = Bubble(rkt_rect)
-bubble_group = pygame.sprite.Group()
-bubble_group.add(bubble)
-anime_bubble = False
-
-blue_ring = BlueRing(rkt_rect)
-ring_group = pygame.sprite.Group()
-ring_group.add(blue_ring)
-anime_ring = False
-
-# Nitro
-nitro = Nitro(rkt_rect)
-stage1 = True
-stage2 = False
-stage3 = False
 
 run = True
 while run:
