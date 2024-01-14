@@ -159,35 +159,41 @@ class BlueRing(pygame.sprite.Sprite):
             self.rect.y += 70
 
 
-class Nitro:
-    def __init__(self):
-        self.nitro_width = 50
-        self.nitro_height = 55
+class Nitro(pygame.sprite.Sprite):
+    def __init__(self, rkt_rect):
+        pygame.sprite.Sprite.__init__(self)
+        self.nitro_width = 25
+        self.nitro_height = 35
         self.padding_right = 10
         self.padding_bottom = 10
-        self.nitro_img = pygame.image.load("imgs/bluefire.gif")
-        self.nitro_img = pygame.transform.scale(self.nitro_img, (self.nitro_width, self.nitro_height))
+        self.nitro_current = 0
+        
+        self.nitro_sprite = []
+        for i in range(1, 5):
+            self.nitro_sprite.append(pygame.image.load(f'imgs/blue-fire/bluefire{i}.png'))
 
-        self.nitro_rect = self.nitro_img.get_rect()
-        self.nitro_rect.center = screen_width - (self.nitro_width / 2) - self.padding_right, (screen_height / 2) - self.nitro_height - self.padding_bottom
+        self.image = self.nitro_sprite[int(self.nitro_current)]
+        self.image = pygame.transform.scale(self.image, (self.nitro_width, self.nitro_height))
+        self.image = pygame.transform.flip(self.image, False, True)
+        self.rect = self.image.get_rect()
 
-        '''self.boom_dimension = 1
-        self.max_boom = 60
-        self.min_boom = 50'''
+        self.rect.center = rkt_rect.center
+        self.rect.y += 30
 
     def draw(self):
-        root.blit(self.nitro_img, self.nitro_rect)
+        root.blit(self.image, self.rect)
 
-    def update(self, screen_width, screen_height):
-        '''if self.nitro_width >= self.max_boom or self.nitro_width <= self.min_boom:
-            self.boom_dimension *= -1
-        
-        self.nitro_width += self.boom_dimension
-        self.nitro_height += self.boom_dimension'''
+    def update(self, rkt_rect):
+        self.nitro_current += 0.25
+        if self.nitro_current >= len(self.nitro_sprite):
+            self.nitro_current = 0
+        self.image = self.nitro_sprite[int(self.nitro_current)]
+        self.image = pygame.transform.scale(self.image, (self.nitro_width, self.nitro_height))
+        self.image = pygame.transform.flip(self.image, False, True)
+        self.rect = self.image.get_rect()
 
-        self.nitro_rect.center = screen_width - self.nitro_width - self.padding_right, screen_height - self.nitro_height - self.padding_bottom
-
-        self.nitro_img = pygame.transform.scale(self.nitro_img, (self.nitro_width, self.nitro_height))
+        self.rect.center = rkt_rect.center
+        self.rect.y += 30
 
         
 pygame.init()
@@ -295,7 +301,10 @@ ring_group.add(blue_ring)
 anime_ring = False
 
 # Nitro
-nitro = Nitro()
+nitro = Nitro(rkt_rect)
+stage1 = True
+stage2 = False
+stage3 = False
 
 # Loop
 run = True
@@ -375,6 +384,8 @@ while run:
         ring_group.draw(root)
         ring_group.update(anime_ring, rkt_rect)
     if progress_max_clock > 60 * 1000:
+        stage1 = False
+        stage2 = True
         rocket = pygame.image.load("imgs/rocket-blue.png")
         rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
         rkt_speed = 400
@@ -384,6 +395,8 @@ while run:
         ring_group.draw(root)
         ring_group.update(anime_ring, rkt_rect)
     if progress_max_clock > 120 * 1000:
+        stage2 = False
+        stage3 = True
         rocket = pygame.image.load("imgs/rocket-blue.png")
         rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
         rkt_speed = 600
@@ -437,6 +450,7 @@ while run:
         bubble_group.draw(root)
         bubble_group.update(anime_bubble, rkt_rect)
         messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
+        rkt_rect.center = screen_width / 2, screen_height / 2
 
     if current_time - progress_clock > 500:
         progress_cont -= 1
@@ -444,9 +458,23 @@ while run:
         progress_clock = pygame.time.get_ticks()
 
     # Nitro
-    if score >= 5:
-        nitro.update(screen_width, screen_height)
+    if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
+        if stage1:
+            rkt_speed = 400
+        elif stage2:
+            rkt_speed = 500
+        elif stage3:
+            rkt_speed = 700
+        progress_cont -= 0.5
+        nitro.update(rkt_rect)
         nitro.draw()
+
+    elif stage1:
+        rkt_speed = 300
+    elif stage2:
+        rkt_séed = 400
+    elif stage3:
+        rkt_speed = 600
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
