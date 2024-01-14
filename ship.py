@@ -1,6 +1,13 @@
 import pygame, random, pygame_menu
 from tkinter import messagebox
 
+pygame.init()
+pygame.mixer.init()
+
+# Screen config
+screen_width = pygame.display.Info().current_w - 100
+screen_height = pygame.display.Info().current_h - 100
+
 
 # Asteroid config
 class Asteroid:
@@ -111,6 +118,7 @@ class ProgressBar(pygame.sprite.Sprite):
         pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
 
 
+# Explosion Sprite
 class Bubble(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
@@ -134,6 +142,7 @@ class Bubble(pygame.sprite.Sprite):
             self.rect.center = rkt_rect.center
 
 
+# StageUp Sprite
 class BlueRing(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
@@ -159,6 +168,7 @@ class BlueRing(pygame.sprite.Sprite):
             self.rect.y += 70
 
 
+# Nitro Sprite
 class Nitro(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
@@ -195,13 +205,191 @@ class Nitro(pygame.sprite.Sprite):
         self.rect.center = rkt_rect.center
         self.rect.y += 35
 
-        
-pygame.init()
-pygame.mixer.init()
 
-# Screen config
-screen_width = pygame.display.Info().current_w - 100
-screen_height = pygame.display.Info().current_h - 100
+# Menu
+def show_menu():
+    menu = pygame_menu.Menu('SHIP GAME', screen_width, screen_height, theme=pygame_menu.themes.THEME_DARK)
+    menu.add.button('Jogar', menu_play)
+    menu.add.button('Sair', pygame_menu.events.EXIT)
+    menu.mainloop(root)
+
+# Loop
+def menu_play():
+    global start_time, score, rocket, progress_max_clock, progress_cont, progress_cont, progress_clock, stage1, stage2, stage3, times_improved
+    run = True
+    while run:
+        screen_width, screen_height = pygame.display.get_surface().get_size()
+        current_time = pygame.time.get_ticks()
+        improve_time = int(current_time) - int(start_time)
+
+        root.fill('#090619')
+        root.blit(background, bg_rect)
+
+        hud2_rect.x = screen_width - hud2_rect.width
+        root.blit(hud, hud_rect)
+        root.blit(hud2, hud2_rect)
+
+        root.blit(tool_cont, tool_cont_rect)
+
+        all_sprites.update()
+        all_sprites.draw(root)
+
+        # Exit Game
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        # Text
+        time_text = font.render(f"{current_time / 1000:.2f}s", True, (0, 0, 255))
+        time_rect = time_text.get_rect(topright = (screen_width - 25, 35))
+        root.blit(time_text, time_rect)
+
+        score_text = font.render(f'{score}', True, (0, 0, 255))
+        score_rect = score_text.get_rect(topleft = (95, 25))
+        root.blit(score_text, score_rect)
+
+        speed_text = font.render(f'Speed: {asteroid_1.ast_speed_x}', True, (255, 255, 255))
+        speed_rect = speed_text.get_rect(center = (screen_width / 2, 35))
+        root.blit(speed_text, speed_rect)
+
+        # Key mapping
+        key = pygame.key.get_pressed()
+        if key[pygame.K_w] or key[pygame.K_UP]:
+            bg_rect.y += bg_speed * dt
+            rkt_rect.y -= rkt_speed * dt
+        if key[pygame.K_a] or key[pygame.K_LEFT]:
+            bg_rect.x += bg_speed * dt
+            rkt_rect.x -= rkt_speed * dt
+        if key[pygame.K_s] or key[pygame.K_DOWN]:
+            bg_rect.y -= bg_speed * dt
+            rkt_rect.y += rkt_speed * dt
+        if key[pygame.K_d] or key[pygame.K_RIGHT]:
+            bg_rect.x -= bg_speed * dt
+            rkt_rect.x += rkt_speed * dt
+        if key[pygame.K_ESCAPE]:
+            run = False
+
+        # Ship config
+        root.blit(rocket, rkt_rect)
+        if rkt_rect.x < 0:
+            rkt_rect.x = 0
+            bg_speed = 0
+        elif rkt_rect.x + rkt_width >  screen_width:
+            rkt_rect.x = screen_width - rkt_width
+            bg_speed = 0
+        elif rkt_rect.y < 0:
+            rkt_rect.y = 0
+            bg_speed = 0
+        elif rkt_rect.y + rkt_height > screen_height:
+            rkt_rect.y = screen_height - rkt_height
+            bg_speed = 0
+        else:
+            bg_speed = 100
+
+            # Speed up
+        if 65 * 1000 > progress_max_clock > 60 * 1000:
+            powerup_effect.play()
+            anime_ring = True
+            ring_group.draw(root)
+            ring_group.update(anime_ring, rkt_rect)
+        if progress_max_clock > 60 * 1000:
+            stage1 = False
+            stage2 = True
+            rocket = pygame.image.load("imgs/rocket-blue.png")
+            rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
+            rkt_speed = 400
+        if 125 * 1000 > progress_max_clock > 120 * 1000:
+            powerup_effect.play()
+            anime_ring = True
+            ring_group.draw(root)
+            ring_group.update(anime_ring, rkt_rect)
+        if progress_max_clock > 120 * 1000:
+            stage2 = False
+            stage3 = True
+            rocket = pygame.image.load("imgs/rocket-blue.png")
+            rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
+            rkt_speed = 600
+
+        # Ship-Asteroid Collision
+        if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or asteroid_5.collision():
+            hit_effect.play()
+            anime_bubble = True
+            bubble_group.draw(root)
+            bubble_group.update(anime_bubble, rkt_rect)
+            messagebox.showwarning("DERROTA", "você bateu no asteroid!")
+            rkt_rect.center = screen_width / 2, screen_height / 2
+
+        # Asteroid Moviment
+        asteroid_1.draw()
+        asteroid_1.update(improve_time)
+
+        asteroid_2.draw()
+        asteroid_2.update(improve_time)
+
+        asteroid_3.draw()
+        asteroid_3.update(improve_time)
+
+        asteroid_4.draw()
+        asteroid_4.update(improve_time)
+
+        if current_time > 120 * 1000:
+            asteroid_5.draw()
+            asteroid_5.update(improve_time)
+
+        if improve_time > improve_clock:
+            start_time = pygame.time.get_ticks()
+            times_improved += 1
+
+        # Tool
+        tool.draw()
+        if tool.collision(hud_rect, hud2_rect):
+            score += 1
+            score_effect.play()
+            if progress_cont < 90:
+                progress_cont += 10
+                progress_bar.update_progress(progress_cont)
+            else:
+                progress_cont = 100
+                progress_bar.update_progress(progress_cont)
+                progress_max_clock = pygame.time.get_ticks()
+
+        # ProgressBar
+        if progress_cont == 0:
+            anime_bubble = True
+            bubble_group.draw(root)
+            bubble_group.update(anime_bubble, rkt_rect)
+            messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
+            rkt_rect.center = screen_width / 2, screen_height / 2
+
+        if current_time - progress_clock > 500:
+            progress_cont -= 1
+            progress_bar.update_progress(progress_cont)
+            progress_clock = pygame.time.get_ticks()
+
+        # Nitro
+        if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
+            if stage1:
+                rkt_speed = 400
+            elif stage2:
+                rkt_speed = 500
+            elif stage3:
+                rkt_speed = 700
+            progress_cont -= 0.5
+            nitro.update(rkt_rect)
+            nitro.draw()
+
+        elif stage1:
+            rkt_speed = 300
+        elif stage2:
+            rkt_séed = 400
+        elif stage3:
+            rkt_speed = 600
+
+        pygame.display.flip()
+        dt = clock.tick(60) / 1000
+
+    pygame.quit()
+
 
 root = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("SHIP GAME")
@@ -306,177 +494,9 @@ stage1 = True
 stage2 = False
 stage3 = False
 
-# Loop
 run = True
 while run:
-    screen_width, screen_height = pygame.display.get_surface().get_size()
-    current_time = pygame.time.get_ticks()
-    improve_time = int(current_time) - int(start_time)
-
-    root.fill('#090619')
-    root.blit(background, bg_rect)
-
-    hud2_rect.x = screen_width - hud2_rect.width
-    root.blit(hud, hud_rect)
-    root.blit(hud2, hud2_rect)
-
-    root.blit(tool_cont, tool_cont_rect)
-
-    all_sprites.update()
-    all_sprites.draw(root)
-
-    # Exit Game
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-
-    # Text
-    time_text = font.render(f"{current_time / 1000:.2f}s", True, (0, 0, 255))
-    time_rect = time_text.get_rect(topright = (screen_width - 25, 35))
-    root.blit(time_text, time_rect)
-
-    score_text = font.render(f'{score}', True, (0, 0, 255))
-    score_rect = score_text.get_rect(topleft = (95, 25))
-    root.blit(score_text, score_rect)
-
-    speed_text = font.render(f'Speed: {asteroid_1.ast_speed_x}', True, (255, 255, 255))
-    speed_rect = speed_text.get_rect(center = (screen_width / 2, 35))
-    root.blit(speed_text, speed_rect)
-
-    # Key mapping
-    key = pygame.key.get_pressed()
-    if key[pygame.K_w] or key[pygame.K_UP]:
-        bg_rect.y += bg_speed * dt
-        rkt_rect.y -= rkt_speed * dt
-    if key[pygame.K_a] or key[pygame.K_LEFT]:
-        bg_rect.x += bg_speed * dt
-        rkt_rect.x -= rkt_speed * dt
-    if key[pygame.K_s] or key[pygame.K_DOWN]:
-        bg_rect.y -= bg_speed * dt
-        rkt_rect.y += rkt_speed * dt
-    if key[pygame.K_d] or key[pygame.K_RIGHT]:
-        bg_rect.x -= bg_speed * dt
-        rkt_rect.x += rkt_speed * dt
-    if key[pygame.K_ESCAPE]:
-        run = False
-
-    # Ship config
-    root.blit(rocket, rkt_rect)
-    if rkt_rect.x < 0:
-        rkt_rect.x = 0
-        bg_speed = 0
-    elif rkt_rect.x + rkt_width >  screen_width:
-        rkt_rect.x = screen_width - rkt_width
-        bg_speed = 0
-    elif rkt_rect.y < 0:
-        rkt_rect.y = 0
-        bg_speed = 0
-    elif rkt_rect.y + rkt_height > screen_height:
-        rkt_rect.y = screen_height - rkt_height
-        bg_speed = 0
-    else:
-        bg_speed = 100
-
-        # Speed up
-    if 65 * 1000 > progress_max_clock > 60 * 1000:
-        powerup_effect.play()
-        anime_ring = True
-        ring_group.draw(root)
-        ring_group.update(anime_ring, rkt_rect)
-    if progress_max_clock > 60 * 1000:
-        stage1 = False
-        stage2 = True
-        rocket = pygame.image.load("imgs/rocket-blue.png")
-        rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
-        rkt_speed = 400
-    if 125 * 1000 > progress_max_clock > 120 * 1000:
-        powerup_effect.play()
-        anime_ring = True
-        ring_group.draw(root)
-        ring_group.update(anime_ring, rkt_rect)
-    if progress_max_clock > 120 * 1000:
-        stage2 = False
-        stage3 = True
-        rocket = pygame.image.load("imgs/rocket-blue.png")
-        rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
-        rkt_speed = 600
-
-    # Ship-Asteroid Collision
-    if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or asteroid_5.collision():
-        hit_effect.play()
-        anime_bubble = True
-        bubble_group.draw(root)
-        bubble_group.update(anime_bubble, rkt_rect)
-        messagebox.showwarning("DERROTA", "você bateu no asteroid!")
-        rkt_rect.center = screen_width / 2, screen_height / 2
-
-    # Asteroid Moviment
-    asteroid_1.draw()
-    asteroid_1.update(improve_time)
-
-    asteroid_2.draw()
-    asteroid_2.update(improve_time)
-
-    asteroid_3.draw()
-    asteroid_3.update(improve_time)
-
-    asteroid_4.draw()
-    asteroid_4.update(improve_time)
-
-    if current_time > 120 * 1000:
-        asteroid_5.draw()
-        asteroid_5.update(improve_time)
-
-    if improve_time > improve_clock:
-        start_time = pygame.time.get_ticks()
-        times_improved += 1
-
-    # Tool
-    tool.draw()
-    if tool.collision(hud_rect, hud2_rect):
-        score += 1
-        score_effect.play()
-        if progress_cont < 90:
-            progress_cont += 10
-            progress_bar.update_progress(progress_cont)
-        else:
-            progress_cont = 100
-            progress_bar.update_progress(progress_cont)
-            progress_max_clock = pygame.time.get_ticks()
-
-    # ProgressBar
-    if progress_cont == 0:
-        anime_bubble = True
-        bubble_group.draw(root)
-        bubble_group.update(anime_bubble, rkt_rect)
-        messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
-        rkt_rect.center = screen_width / 2, screen_height / 2
-
-    if current_time - progress_clock > 500:
-        progress_cont -= 1
-        progress_bar.update_progress(progress_cont)
-        progress_clock = pygame.time.get_ticks()
-
-    # Nitro
-    if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
-        if stage1:
-            rkt_speed = 400
-        elif stage2:
-            rkt_speed = 500
-        elif stage3:
-            rkt_speed = 700
-        progress_cont -= 0.5
-        nitro.update(rkt_rect)
-        nitro.draw()
-
-    elif stage1:
-        rkt_speed = 300
-    elif stage2:
-        rkt_séed = 400
-    elif stage3:
-        rkt_speed = 600
-
-    pygame.display.flip()
-    dt = clock.tick(60) / 1000
+    show_menu()
+    menu_play()
 
 pygame.quit()
