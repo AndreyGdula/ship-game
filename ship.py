@@ -115,16 +115,8 @@ class Bubble(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
         self.bubble_sprite = []
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_1.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_2.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_3.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_4.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_5.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_6.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_7.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_8.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_9.png'))
-        self.bubble_sprite.append(pygame.image.load('imgs/bubble/bubble_10.png'))
+        for i in range(1, 11):
+            self.bubble_sprite.append(pygame.image.load(f'imgs/bubble/bubble_{i}.png'))
 
         self.sprite_current = 0
         self.image = self.bubble_sprite[self.sprite_current]
@@ -146,25 +138,8 @@ class BlueRing(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
         self.ring_sprite = []
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion1.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion2.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion3.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion4.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion5.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion6.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion7.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion8.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion9.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion10.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion11.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion12.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion13.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion14.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion15.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion16.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion17.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion18.png'))
-        self.ring_sprite.append(pygame.image.load('imgs/blue-ring/Blue Ring Explosion19.png'))
+        for i in range(1, 20):
+            self.ring_sprite.append(pygame.image.load(f'imgs/blue-ring/Blue Ring Explosion{i}.png'))
 
         self.ring_current = 0
         self.image = self.ring_sprite[self.ring_current]
