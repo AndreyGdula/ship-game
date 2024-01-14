@@ -162,8 +162,8 @@ class BlueRing(pygame.sprite.Sprite):
 class Nitro(pygame.sprite.Sprite):
     def __init__(self, rkt_rect):
         pygame.sprite.Sprite.__init__(self)
-        self.nitro_width = 25
-        self.nitro_height = 35
+        self.nitro_width = 15
+        self.nitro_height = 25
         self.padding_right = 10
         self.padding_bottom = 10
         self.nitro_current = 0
@@ -178,7 +178,7 @@ class Nitro(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.rect.center = rkt_rect.center
-        self.rect.y += 30
+        self.rect.y += 35
 
     def draw(self):
         root.blit(self.image, self.rect)
@@ -193,7 +193,7 @@ class Nitro(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.rect.center = rkt_rect.center
-        self.rect.y += 30
+        self.rect.y += 35
 
         
 pygame.init()
