@@ -221,7 +221,7 @@ def show_gameover():
 
 # Loop
 def menu_play():
-    global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, bubble_group, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, times_improved, score, start_time, progress_cont, progress_clock, progress_max_clock, anime_bubble, anime_ring, start_time, screen_width, screen_height
+    global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, bubble_group, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, score, start_time, progress_cont, progress_clock, anime_bubble, anime_ring, start_time, screen_width, screen_height
 
     # Ticks
     clock = pygame.time.Clock()
@@ -291,7 +291,7 @@ def menu_play():
 
     update_time = 5000
     improve_clock = 10000
-    times_improved = 0
+
 
     # Tool preset
     tool = Tool()
@@ -302,6 +302,7 @@ def menu_play():
 
     # General preset
     start_time = pygame.time.get_ticks()
+    run_time = pygame.time.get_ticks()
 
     # ProgressBar preset
     progress_bar = ProgressBar(100)
@@ -309,7 +310,7 @@ def menu_play():
     all_sprites.add(progress_bar)
     progress_cont = 100
     progress_clock = pygame.time.get_ticks()
-    progress_max_clock = 0
+
 
     # Sprites
     bubble = Bubble(rkt_rect)
@@ -332,6 +333,7 @@ def menu_play():
     while run:
         screen_width, screen_height = pygame.display.get_surface().get_size()
         current_time = pygame.time.get_ticks()
+        clock_start = pygame.time.get_ticks() - int(run_time)
         improve_time = int(current_time) - int(start_time)
 
         root.fill('#090619')
@@ -352,7 +354,7 @@ def menu_play():
                 run = False
 
         # Text
-        time_text = font.render(f"{current_time / 1000:.2f}s", True, (0, 0, 255))
+        time_text = font.render(f"{clock_start / 1000:.2f}s", True, (0, 0, 255))
         time_rect = time_text.get_rect(topright = (screen_width - 25, 35))
         root.blit(time_text, time_rect)
 
@@ -419,23 +421,23 @@ def menu_play():
             bg_speed = 100
 
             # Speed up
-        if 65 * 1000 > progress_max_clock > 60 * 1000:
+        if 65 * 1000 > clock_start > 60 * 1000:
             powerup_effect.play()
             anime_ring = True
             ring_group.draw(root)
             ring_group.update(anime_ring, rkt_rect)
-        if progress_max_clock > 60 * 1000:
+        if clock_start > 60 * 1000:
             stage1 = False
             stage2 = True
             rocket = pygame.image.load("imgs/rocket-blue.png")
             rocket = pygame.transform.scale(rocket, (rkt_width, rkt_height))
             rkt_speed = 400
-        if 125 * 1000 > progress_max_clock > 120 * 1000:
+        if 125 * 1000 > clock_start > 120 * 1000:
             powerup_effect.play()
             anime_ring = True
             ring_group.draw(root)
             ring_group.update(anime_ring, rkt_rect)
-        if progress_max_clock > 120 * 1000:
+        if clock_start > 120 * 1000:
             stage2 = False
             stage3 = True
             rocket = pygame.image.load("imgs/rocket-blue.png")
@@ -464,13 +466,12 @@ def menu_play():
         asteroid_4.draw()
         asteroid_4.update(improve_time)
 
-        if current_time > 120 * 1000:
+        if clock_start > 120 * 1000:
             asteroid_5.draw()
             asteroid_5.update(improve_time)
 
         if improve_time > improve_clock:
             start_time = pygame.time.get_ticks()
-            times_improved += 1
 
         # Tool
         tool.draw()
@@ -483,7 +484,6 @@ def menu_play():
             else:
                 progress_cont = 100
                 progress_bar.update_progress(progress_cont)
-                progress_max_clock = pygame.time.get_ticks()
 
         # ProgressBar
         if progress_cont == 0:
