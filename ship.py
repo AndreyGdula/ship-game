@@ -1,5 +1,4 @@
 import pygame, random, pygame_menu
-from tkinter import messagebox
 
 pygame.init()
 pygame.mixer.init()
@@ -201,7 +200,7 @@ def show_gameover():
     
 # Loop
 def menu_play():
-    global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, bubble_group, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, score, start_time, progress_cont, progress_clock, anime_bubble, anime_ring, start_time, screen_width, screen_height
+    global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, score, start_time, progress_cont, progress_clock, anime_ring, start_time, screen_width, screen_height
 
     # Ticks
     clock = pygame.time.Clock()
@@ -463,11 +462,6 @@ def menu_play():
 
             # ProgressBar
             if progress_cont == 0:
-                anime_bubble = True
-                bubble_group.draw(root)
-                bubble_group.update(anime_bubble, rkt_rect)
-                messagebox.showwarning("DERROTA", 'Sua nave quebrou!')
-                rkt_rect.center = screen_width / 2, screen_height / 2
                 show_gameover()
 
             if current_time - progress_clock > 500:
