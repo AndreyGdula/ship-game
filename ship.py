@@ -20,7 +20,7 @@ class Asteroid:
         self.ast_mask = pygame.mask.from_surface(self.asteroid)
 
         self.ast_rect.x = random.randint(1, screen_width - 20)
-        self.ast_rect.y = random.choice([20, screen_height - 35])
+        self.ast_rect.y = random.choice([20, screen_height - 50])
 
         self.ast_speed_x = random.randint(-4, 4)
         self.ast_speed_y = random.randint(-4, 4)
