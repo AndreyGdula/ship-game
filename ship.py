@@ -107,7 +107,7 @@ class ProgressBar(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.progress_width, self.progress_height))
         self.image.fill('#022431')  # Define a cor de fundo da barra de progresso
         self.rect = self.image.get_rect()
-        self.rect.x = screen_width * 2 / 3
+        self.rect.x = (screen_width * 2 / 3) - 70
         self.rect.y = 10
         self.color_fg = 'blue'  # Define a cor da barra de progresso (cor do progresso)
         self.progress = progress  # Define o progresso atual da barra de progresso (0-100%)
@@ -116,30 +116,6 @@ class ProgressBar(pygame.sprite.Sprite):
         self.progress = progress  # Atualiza o progresso
         self.image.fill('#022431')  # Preenche a imagem com a cor de fundo
         pygame.draw.rect(self.image, self.color_fg, (0, 0, self.rect.width * (progress / 100), self.rect.height))
-
-
-# Explosion Sprite
-class Bubble(pygame.sprite.Sprite):
-    def __init__(self, rkt_rect):
-        pygame.sprite.Sprite.__init__(self)
-        self.bubble_sprite = []
-        for i in range(1, 11):
-            self.bubble_sprite.append(pygame.image.load(f'imgs/bubble/bubble_{i}.png'))
-
-        self.sprite_current = 0
-        self.image = self.bubble_sprite[self.sprite_current]
-        self.rect = self.image.get_rect()
-        self.rect.center = rkt_rect.center
-
-    def update(self, anime_bubble, rkt_rect):
-        if anime_bubble:
-            self.sprite_current += 0.5
-            if self.sprite_current >= len(self.bubble_sprite):
-                self.sprite_current = 0
-                anime_bubble = False
-            self.image = self.bubble_sprite[int(self.sprite_current)]
-            self.image = pygame.transform.scale2x(self.image)
-            self.rect.center = rkt_rect.center
 
 
 # StageUp Sprite
@@ -222,7 +198,7 @@ def show_gameover():
     gameover.add.button('RESTART', menu_play)
     gameover.add.button('EXIT', pygame_menu.events.EXIT)
     gameover.mainloop(root)
-
+    
 # Loop
 def menu_play():
     global clock, dt, background, bg_rect, bg_speed, hud, hud_rect, hud2, hud2_rect, improve_clock, rkt_rect, rkt_mask, tool_cont, tool_cont_rect, all_sprites, font, asteroid_1, asteroid_2, asteroid_3, asteroid_4, asteroid_5, rkt_width, rkt_height, powerup_effect, ring_group, hit_effect, bubble_group, tool, score_effect, progress_bar, nitro, stage1, stage2, stage3, rkt_speed, update_time, score, start_time, progress_cont, progress_clock, anime_bubble, anime_ring, start_time, screen_width, screen_height
@@ -232,8 +208,8 @@ def menu_play():
     dt = 0
 
     # Screen Config
-    screen_width = pygame.display.Info().current_w - 100
-    screen_height = pygame.display.Info().current_h - 100
+    screen_width = pygame.display.Info().current_w
+    screen_height = pygame.display.Info().current_h
 
         # Files config
     # Background preset
@@ -315,13 +291,7 @@ def menu_play():
     progress_cont = 100
     progress_clock = pygame.time.get_ticks()
 
-
-    # Sprites
-    bubble = Bubble(rkt_rect)
-    bubble_group = pygame.sprite.Group()
-    bubble_group.add(bubble)
-    anime_bubble = False
-
+    # Blue Ring
     blue_ring = BlueRing(rkt_rect)
     ring_group = pygame.sprite.Group()
     ring_group.add(blue_ring)
@@ -335,6 +305,7 @@ def menu_play():
 
     game_pause = False
     pause_time = 0
+    pause_rect = pygame.Rect(0, 0, screen_width, screen_height)
 
     run = True
     while run:
@@ -456,10 +427,6 @@ def menu_play():
             # Ship-Asteroid Collision
             if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or  clock_start > 125 * 1000 and asteroid_5.collision():
                 hit_effect.play()
-                anime_bubble = True
-                bubble_group.draw(root)
-                bubble_group.update(anime_bubble, rkt_rect)
-                rkt_rect.center = screen_width / 2, screen_height / 2
                 show_gameover()
 
             # Asteroid Moviment
@@ -532,10 +499,24 @@ def menu_play():
 
         elif game_pause == True:
             pause_time = pygame.time.get_ticks() - int(start_time)
+            pygame.draw.rect(root, bg_color, pause_rect)
+
+            pause_title = title_font.render("PAUSE", True, text_color)
+            pause_title_rect = pause_title.get_rect()
+            pause_title_rect.center = screen_width / 2, screen_height / 2
+
+            obs_exit = widget_font.render("to exit press ALT+F4", True, text_color)
+            obs_exit_rect = obs_exit.get_rect()
+            obs_exit_rect.center = screen_width / 2, screen_height - pause_title_rect.y + 10
+
+            root.blit(pause_title, pause_title_rect)
+            root.blit(obs_exit, obs_exit_rect)
+
+            pygame.display.flip()
 
     pygame.quit()
 
-
+# Menu preset
 bg_color = (10, 7, 26)
 text_color = (255, 255, 255)
 title_path = "font/blackops.ttf"
