@@ -194,6 +194,8 @@ def show_gameover():
     my_theme = pygame_menu.themes.Theme(background_color=bg_color, title_font=title_font, title_font_color=text_color,widget_font=widget_font, widget_font_color=text_color)
 
     gameover = pygame_menu.Menu('GAME OVER', screen_width, screen_height, theme=my_theme)
+    gameover.add.label(f'Score: {score}')
+    gameover.add.label(f'Record: {max(scores)}')
     gameover.add.button('RESTART', menu_play)
     gameover.add.button('EXIT', pygame_menu.events.EXIT)
     gameover.mainloop(root)
@@ -426,6 +428,7 @@ def menu_play():
             # Ship-Asteroid Collision
             if asteroid_1.collision() or asteroid_2.collision() or asteroid_3.collision() or asteroid_4.collision() or  clock_start > 125 * 1000 and asteroid_5.collision():
                 hit_effect.play()
+                scores.append(score)
                 show_gameover()
 
             # Asteroid Moviment
@@ -462,6 +465,7 @@ def menu_play():
 
             # ProgressBar
             if progress_cont == 0:
+                scores.append(score)
                 show_gameover()
 
             if current_time - progress_clock > 500:
@@ -523,6 +527,7 @@ root = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("SHIP GAME")
 
 run = True
+scores = []
 while run:
     show_menu()
     menu_play()
